@@ -1,2 +1,2 @@
 # DisparityMatrix
-This project aim to set a tcp network exchange system for disparity matrix
+Questo progetto si occupa della trasmissione della matrice di disparità attraverso la rete
