@@ -1,56 +1,94 @@
+import os.path
 import pickle
 import socket
+import tarfile
 import time
 from PIL import Image
 
-HOST = "127.0.0.1"
-PORT = 50001
-INITIAL_MESSAGE = 'ready?'
-RCV_WINDOW = 64
-TIME = 'network/time/time.csv'
 
-print(f"* Client → connect to {HOST} on port {PORT} in progress...")
+def run_client(compressed, buffer):
+    HOST = "127.0.0.1"
+    PORT = 50000
+    INITIAL_MESSAGE = 'ready?'
+    RCV_WINDOW = 64
 
-data = Image.open('compression/pillow/png/disparity0compressed.png')
+    lst = os.listdir("compression/pillow/png")  # your directory path
+    number_files = len(lst)
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((HOST, PORT))
+    for curr in range(0, number_files):
+        print(f"* Client → connect to {HOST} on port {PORT} in progress...")
 
-start = time.time()
+        data = Image.open('compression/pillow/png/disparity' + str(curr) + 'compressed.png')
 
-header = dict(
-    size=data.size,
-    msg=INITIAL_MESSAGE,
-    time=start
-)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((HOST, PORT))
 
-print("* Client → Sending request to server")
+        t0 = time.time()
 
-sock.sendall(pickle.dumps(header))
+        header = dict(
+            size=data.size,
+            msg=INITIAL_MESSAGE
+        )
 
-resp = sock.recv(RCV_WINDOW)
+        print("* Client → Sending request to server")
 
-print("+ Server → " + resp.decode())
+        sock.sendall(pickle.dumps(header))
 
-if resp.decode() == 'Ok':
-    print("* Client → sending disparity map to server")
+        resp = sock.recv(RCV_WINDOW)
 
-    sock.sendall(pickle.dumps(data))
+        t1 = time.time()
 
-    end = time.time()
+        print("+ Server → " + resp.decode())
 
-    sock.close()
+        if resp.decode() == 'Ok':
+            print("* Client → sending disparity map to server")
 
-    print(f"* Client → Time to encode disparity map: {end - start} [s]")
+            tar = tarfile.open('prova.tar.gz', 'w:gz')
 
-    with open(TIME, 'a+') as file:
-        file.write(f"Client encoding;{end - start}\n")
+            if compressed:
+                t = 'network/time/tcp/tcp_times_compressed_' + str(buffer) + '.csv'
+                tar.add("compression/pillow/png/disparity" + str(curr) + "compressed.png",
+                        arcname=os.path.basename("disparity" + str(curr) + "compressed.png"))
+            else:
+                t = 'network/time/tcp/tcp_times_' + str(buffer) + '.csv'
+                tar.add("disparity/png/disparity" + str(curr) + ".png",
+                        arcname=os.path.basename("disparity" + str(curr) + ".png"))
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.connect((HOST, PORT))
+            tar.close()
 
-    print("+ Server → " + sock.recv(RCV_WINDOW).decode())
+            t2 = time.time()
 
-    sock.close()
-else:
-    sock.close()
+            sock.sendall(pickle.dumps(open('prova.tar.gz', 'rb').read()))
+
+            sock.sendall(b"end")
+
+            print("+ Server → " + sock.recv(RCV_WINDOW).decode())
+
+            t3 = time.time()
+
+            print(f"* Client → Encoding time {t2 - t1} [s]")
+            print(f"* Client → Total time {t3 - t0} [s]")
+            print(f"* Client → Data_transfer_time: {((t3 - t2) - ((t1 - t0) / 2))} [s]\n")
+
+            sock.close()
+
+            if os.path.exists(t):
+                with open(t, "a") as f:
+                    f.write("Frame " + str(curr) + ";" + str(t3 - t0) + "\n")
+            else:
+                with open(t, "w") as f:
+                    f.write("Frame " + str(curr) + ";" + str(t3 - t0) + "\n")
+
+            os.remove('prova.tar.gz')
+
+        else:
+            sock.close()
+
+
+if __name__ == '__main__':
+    rcv_buffer_values = [1024, 2048, 4096, 8192, 16384, 32768, 65536]
+
+    for val in rcv_buffer_values:
+        run_client(compressed=False, buffer=val)
+        time.sleep(0.2)
+        run_client(compressed=True, buffer=val)

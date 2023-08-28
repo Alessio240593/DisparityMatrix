@@ -56,9 +56,11 @@ def distribution_of_differences_over_time(disparities):
         plt.savefig(destination_dir + '/frame' + str(curr) + "- frame" + str(curr + 1) + ".png", dpi=500, pad_inches=0,
                     bbox_inches='tight')
 
-        plt.show()
+        #plt.show()
 
-        print("Analyzing distribution of differences frame " + str(curr) + " frame " + str(curr + 1) + " completed\n")
+        print("Analyzing distribution of differences frame " + str(curr) + " - frame " + str(curr + 1) + " completed\n")
+
+        plt.close()
 
 
 def distribution_of_frame(disparities):
@@ -100,9 +102,11 @@ def distribution_of_frame(disparities):
 
         plt.savefig(destination_dir + '/frame' + str(curr) + ".png", dpi=500, pad_inches=0, bbox_inches='tight')
 
-        plt.show()
+        #plt.show()
 
         print("Analyzing distribution of frame " + str(curr) + " completed\n")
+
+        plt.close()
 
 
 def distribution_of_rows_differences(disparities):
@@ -156,9 +160,11 @@ def distribution_of_rows_differences(disparities):
 
         plt.savefig(destination_dir + '/frame' + str(curr) + ".png", dpi=500, pad_inches=0, bbox_inches='tight')
 
-        plt.show()
+        #plt.show()
 
         print("Analyzing distribution of frame " + str(curr) + " completed\n")
+
+        plt.close()
 
 
 if __name__ == '__main__':

@@ -1,75 +1,134 @@
 import os
 import pickle
 import socket
+import statistics
 import time
 from os.path import exists
-import numpy as np
-from PIL import Image
 
-HOST = "127.0.0.1"
-PORT = 50001
-RCV_WINDOW = 4096
-TIME = 'network/time'
-CLIENT_DATA = 'network/data'
+import pandas as pd
 
-if not exists(TIME):
-    os.makedirs(TIME)
-elif exists(TIME + "/time.csv"):
-    os.remove(TIME + "/time.csv")
+import init
 
-if not exists(CLIENT_DATA):
-    os.makedirs(CLIENT_DATA)
 
-print(f"+ Server → {HOST} waiting on port {PORT}...")
+def tcp_statistics(buffer):
+    frame = pd.read_csv("network/time/tcp/tcp_times_" + str(buffer) + ".csv")
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.bind((HOST, PORT))
-sock.listen()
-conn, addr = sock.accept()
+    frame.columns = ['data']
 
-start = time.time()
+    value = frame['data'].values
 
-header = pickle.loads(conn.recv(RCV_WINDOW))
+    new = [float(x.split(';')[1]) for x in value]
 
-print("* Client → " + str(header['msg']))
+    with open('network/time/tcp/tcp_times_' + str(buffer) + '.csv', 'a') as f:
+        f.write(f"\ntot;{sum(new)}\n")
+        f.write(f"\nmean;{statistics.mean(new)}\n")
+        f.write(f"median;{statistics.median(new)}\n")
+        f.write(f"stdev;{statistics.stdev(new)}\n")
+        f.write(f"mode;{statistics.mode(new)}\n")
 
-if header['msg'] == "ready?":
-    print("+ Server → sending confirm to client")
-    conn.send(b"Ok")
-else:
-    exit(-1)
+    frame = pd.read_csv("network/time/tcp/tcp_times_compressed_" + str(buffer) + ".csv")
 
-buffer = b""
-while True:
-    data = conn.recv(RCV_WINDOW)
-    if not data:
-        break
-    buffer += data
+    frame.columns = ['data']
 
-data = pickle.loads(buffer)
+    value = frame['data'].values
 
-end = time.time()
+    new = [float(x.split(';')[1]) for x in value]
 
-print("+ Server → data receved correctly")
+    with open('network/time/tcp/tcp_times_compressed_' + str(buffer) + '.csv', 'a') as f:
+        f.write(f"\ntot;{sum(new)}\n")
+        f.write(f"\nmean;{statistics.mean(new)}\n")
+        f.write(f"median;{statistics.median(new)}\n")
+        f.write(f"stdev;{statistics.stdev(new)}\n")
+        f.write(f"mode;{statistics.mode(new)}\n")
 
-print(f"+ Server → Time to decode data {end - start} [s]")
-print(f"+ Server → Total time: {end - header['time']} [s]")
 
-conn.close()
+def run_server(compressed, buffer):
+    HOST = "127.0.0.1"
+    PORT = 50000
+    RCV_WINDOW = buffer
+    TIME = 'network/time/tcp'
 
-new_im = Image.fromarray(np.array(data), 'L')
+    if compressed:
+        CLIENT_DATA = 'network/data/tcp/compressed'
+        if not exists(TIME):
+            os.makedirs(TIME)
+        elif exists(TIME + "/tcp_times_compressed_" + str(buffer) + ".csv"):
+            os.remove(TIME + "/tcp_times_compressed_" + str(buffer) + ".csv")
+    else:
+        CLIENT_DATA = 'network/data/tcp/not_compressed'
+        if not exists(TIME):
+            os.makedirs(TIME)
+        elif exists(TIME + "/tcp_times_" + str(buffer) + ".csv"):
+            os.remove(TIME + "/tcp_times_" + str(buffer) + ".csv")
 
-new_im.save(CLIENT_DATA + '/client_data.png', quality=90, optimize=True)
+    if not exists(CLIENT_DATA):
+        os.makedirs(CLIENT_DATA)
 
-with open(TIME + "/time.csv", 'a+') as file:
-    file.write(f"Server decoding;{end - start}\n")
-    file.write(f"Total time;{end - header['time']}\n")
+    lst = os.listdir("compression/pillow/png")  # your directory path
+    number_files = len(lst)
 
-sock.listen()
-conn, addr = sock.accept()
+    count = 0
 
-print("+ Server → sending feedback to client")
+    while count < number_files:
+        print(f"+ Server → {HOST} waiting on port {PORT}...")
 
-conn.send(b'Data received correctly')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-conn.close()
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        sock.bind((HOST, PORT))
+        sock.listen()
+        conn, addr = sock.accept()
+
+        start = time.time()
+
+        header = pickle.loads(conn.recv(RCV_WINDOW))
+
+        print("* Client → " + str(header['msg']))
+
+        if header['msg'] == "ready?":
+            print("+ Server → sending confirm to client")
+            conn.send(b"Ok")
+        else:
+            exit(0)
+
+        buffer = b""
+        while True:
+            data = conn.recv(RCV_WINDOW)
+            if b"end" in data:
+                buffer += data[: (len(data) - len(b"end"))]
+                break
+            buffer += data
+
+        data = pickle.loads(buffer)
+
+        end = time.time()
+
+        file = open(CLIENT_DATA + "/frame" + str(count) + "_tcp.tar.gz", "wb")
+
+        count = count + 1
+
+        file.write(data)
+
+        print("+ Server → data receved correctly")
+
+        print(f"+ Server → Time to decode data {end - start} [s]")
+
+        print("+ Server → sending feedback to client \n")
+
+        conn.send(b'Data received correctly')
+
+        conn.close()
+
+
+if __name__ == '__main__':
+    rcv_buffer_values = [1024, 2048, 4096, 8192, 16384, 32768, 65536]
+
+    init.disparity_compression()
+
+    for val in rcv_buffer_values:
+        run_server(compressed=False, buffer=val)
+        run_server(compressed=True, buffer=val)
+
+    for val in rcv_buffer_values:
+        tcp_statistics(val)

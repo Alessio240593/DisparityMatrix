@@ -8,8 +8,7 @@ from lib import image_processing as imgProc
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-
-MAX_QUANTITY = 2
+MAX_QUANTITY = 10
 
 DIRECTORY_JPG = "disparity/jpg"
 DIRECTORY_PNG = "disparity/png"
@@ -40,8 +39,8 @@ if __name__ == "__main__":
         print("Analyzing distribution of frame " + str(curr) + " in progress...")
 
         path_jpg = os.path.join(DIRECTORY_JPG, "disparity" + str(curr) + ".jpg")
-        path_png = os.path.join(DIRECTORY_PNG,  "disparity" + str(curr) + ".png")
-        path_npy = os.path.join(DIRECTORY_NPY,  "disparity" + str(curr) + ".npy")
+        path_png = os.path.join(DIRECTORY_PNG, "disparity" + str(curr) + ".png")
+        path_npy = os.path.join(DIRECTORY_NPY, "disparity" + str(curr) + ".npy")
 
         # checking if it is a file
         if os.path.isfile(path_jpg) and os.path.isfile(path_png) and os.path.isfile(path_npy):
@@ -69,17 +68,16 @@ if __name__ == "__main__":
             moda_png = stats.mode(sub_png, axis=None)
             moda_npy = stats.mode(sub_npy, axis=None)
 
-
             ax[0].text(3, 4, f'Max: {sub_jpg.max()}' +
-                     f'\nMin: {sub_jpg.min()}' +
-                     f'\nMean: {round(sub_jpg.mean(), 2)}' +
-                     f'\nStd: {round(sub_jpg.std(), 2)}' +
-                     f'\nMedian: {int(np.median(sub_jpg))}' +
-                     f'\nMode: {moda_jpg.mode} (counts : {moda_jpg.count})' +
-                     f'\nTotal pixels: {sub_jpg.size}' +
-                     f'\nOutlayer: {sub_jpg.size - moda_jpg.count}'
-                     , fontsize=8,
-                     bbox=dict(boxstyle='square,pad=1', facecolor='blue', alpha=0.5))
+                       f'\nMin: {sub_jpg.min()}' +
+                       f'\nMean: {round(sub_jpg.mean(), 2)}' +
+                       f'\nStd: {round(sub_jpg.std(), 2)}' +
+                       f'\nMedian: {int(np.median(sub_jpg))}' +
+                       f'\nMode: {moda_jpg.mode} (counts : {moda_jpg.count})' +
+                       f'\nTotal pixels: {sub_jpg.size}' +
+                       f'\nOutlayer: {sub_jpg.size - moda_jpg.count}'
+                       , fontsize=8,
+                       bbox=dict(boxstyle='square,pad=1', facecolor='blue', alpha=0.5))
 
             ax[1].text(0.1, 35, f'Max: {sub_png.max()}' +
                        f'\nMin: {sub_png.min()}' +
@@ -122,7 +120,7 @@ if __name__ == "__main__":
                         pad_inches=0,
                         bbox_inches='tight')
 
-            #plt.show()
+            # plt.show()
 
             cv2.waitKey()
 
@@ -130,7 +128,7 @@ if __name__ == "__main__":
 
             curr = curr + 1
 
-
+            plt.close()
 
     # JPG
     curr = 0
@@ -177,16 +175,16 @@ if __name__ == "__main__":
                         pad_inches=0,
                         bbox_inches='tight')
 
-            #plt.show()
+            # plt.show()
 
             cv2.waitKey()
 
             print("Analyzing distribution of frame " + str(curr) + " completed\n")
 
             curr = curr + 1
+            plt.close()
 
-
-    #PNG
+    # PNG
     curr = 0
     if not os.path.exists(DESTINATION_DIR_PNG):
         os.makedirs(DESTINATION_DIR_PNG)
@@ -231,7 +229,7 @@ if __name__ == "__main__":
                         pad_inches=0,
                         bbox_inches='tight')
 
-            #plt.show()
+            # plt.show()
 
             cv2.waitKey()
 
@@ -239,6 +237,7 @@ if __name__ == "__main__":
 
             print("Analyzing distribution of frame " + str(curr) + " completed\n")
 
+            plt.close()
 
     # NPY
 
@@ -286,10 +285,12 @@ if __name__ == "__main__":
                         pad_inches=0,
                         bbox_inches='tight')
 
-            #plt.show()
+            # plt.show()
 
             cv2.waitKey()
 
             curr = curr + 1
 
             print("Analyzing distribution of frame " + str(curr) + " completed\n")
+
+            plt.close()

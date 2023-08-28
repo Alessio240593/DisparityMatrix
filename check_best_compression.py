@@ -67,9 +67,9 @@ for curr in range(0, number_files):
 
     plt.savefig(DESTINATION_JPG_RESULTS + '/frame' + str(curr) + ".png", dpi=500, pad_inches=0, bbox_inches='tight')
 
-    plt.show()
+    #plt.show()
 
-plt.close()
+    plt.close()
 
 #PNG
 lst = os.listdir(SOURCE_ORIGINAL_DIR_PNG)  # your directory path
@@ -118,4 +118,6 @@ for curr in range(0, number_files):
 
     plt.savefig(DESTINATION_PNG_RESULTS + '/frame' + str(curr) + ".png", dpi=500, pad_inches=0, bbox_inches='tight')
 
-    plt.show()
+    #plt.show()
+
+    plt.close()

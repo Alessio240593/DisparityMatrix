@@ -1,0 +1,8 @@
+distribution_of_frame → rappresenta le distribuzioni dei vari frame della matrice di disparità per
+						 ogni istante di tempo
+						 
+distribution_of_rows_differences → rappresenta la distribuzione delle differenze tra le varie righe 
+									nel tempo
+									
+									
+distribution_of_differences_over_time → rappresenta la distribuzione delle differenze tra le coppie di frame nel tempo

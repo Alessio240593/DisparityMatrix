@@ -3,7 +3,7 @@ import os
 import PIL
 from PIL import Image
 
-DESTINATION_DIR = "../compression/pillow/"
+DESTINATION_DIR = "compression/pillow/"
 
 
 def get_size_format(b, factor=1024, suffix="B"):
@@ -65,7 +65,7 @@ def compress_img(image_name, curr, new_size_ratio=0.9, quality=90, width=None, h
     # calculate the saving bytes
     saving_diff = new_image_size - image_size
     # print the saving percentage
-    print(f"[+] Image size change: {saving_diff / image_size * 100:.2f}% of the original image size.")
+    print(f"[+] Image size change: {saving_diff / image_size * 100:.2f}% of the original image size.\n\n")
 
 
 if __name__ == "__main__":
